@@ -53,17 +53,35 @@ class ViewController: UIViewController {
             
             if post.imageData == nil {
                 content.image = UIImage(named: "rect")
+                GettingDataManager.shared.getTheImage(url: post.urls.regular) { result in
+                    switch result {
+                    case .failure(let err): print(err, "it failed")
+                    case .success(let img):
+                        print("we got the image")
+                        var updatedSnapshot = self.dataSource.snapshot()
+                        if let datasourceIndex = updatedSnapshot.indexOfItem(post) {
+                            var item = self.apiResponse.results[datasourceIndex]
+                            print("about to update the image for the item")
+                            dump(item)
+                            print(String(repeating: "---", count: 20))
+                            item.imageData = img.jpegData(compressionQuality: 0.90)
+                            dump(item)
+                            updatedSnapshot.reloadItems([item])
+                            DispatchQueue.main.async {
+                                self.dataSource.apply(updatedSnapshot, animatingDifferences: true)
+                            }
+                            
+                        }
+
+                    }
+                }
+            
+
+            } else {
+                content.image = UIImage(data: post.imageData!)
             }
             content.imageProperties.tintColor = .orange
-            
-            GettingDataManager.shared.getTheImage(url: post.urls.regular) { result in
-                switch result {
-                case .failure(let err): print(err, "it failed")
-                case .success(let img): print("we got the image")
-                }
-            }
-            
-            
+     
             
             
             
